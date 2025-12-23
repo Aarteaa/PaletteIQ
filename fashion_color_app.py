@@ -696,11 +696,6 @@ if uploaded_file is not None:
     st.subheader("💾 Export Complete Analysis")
     
     # Create comprehensive report
-<invoke name="artifacts">
-<parameter name="command">update</parameter>
-<parameter name="id">fashion_color_app</parameter>
-<parameter name="old_str">    # Create comprehensive report</parameter>
-<parameter name="new_str">    # Create comprehensive report
     report_data = {
         'Analysis Type': ['Dominant Color', 'Undertone', 'Season', 'Trend Score'],
         'Result': [
