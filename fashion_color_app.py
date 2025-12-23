@@ -373,16 +373,30 @@ SEASON_MAP = {
 }
 
 # Recommended color palettes for each season (hex codes)
+# Based on professional color analysis theory
 SEASON_PALETTES = {
-    "Light Spring": ["#FFE5B4", "#FFDAB9", "#FFB6C1", "#87CEEB", "#98FB98", "#FFA07A"],
-    "Warm Spring": ["#FF6347", "#FFD700", "#FF8C00", "#ADFF2F", "#00CED1", "#FF69B4"],
-    "Soft Autumn": ["#D2B48C", "#BC8F8F", "#CD853F", "#8FBC8F", "#B0C4DE", "#DEB887"],
-    "Dark Autumn": ["#8B4513", "#A0522D", "#800000", "#556B2F", "#2F4F4F", "#8B0000"],
-    "Light Summer": ["#E6E6FA", "#F0E68C", "#B0E0E6", "#FFB6C1", "#DDA0DD", "#F5DEB3"],
-    "Cool Summer": ["#708090", "#778899", "#B0C4DE", "#6A5ACD", "#9370DB", "#8FBC8F"],
-    "Dark Winter": ["#000080", "#8B0000", "#2F4F4F", "#4B0082", "#800080", "#191970"],
-    "Bright Winter": ["#FF1493", "#00CED1", "#FF4500", "#0000FF", "#FF00FF", "#00FF00"],
+    "Light Spring": ["#FFB6C1", "#FFDAB9", "#87CEEB", "#FFE4B5", "#F0E68C", "#FFFACD"],  # Blush pink, apricot, aqua, soft gold
+    "Warm Spring": ["#FF6347", "#DAA520", "#808000", "#FF4500", "#F4A460", "#D2691E"],  # Warm red, mustard, olive, tomato red
+    "Soft Autumn": ["#BC8F8F", "#D2B48C", "#8FBC8F", "#5F9EA0", "#DDA0DD", "#C19A6B"],  # Taupe, warm rose, soft olive, muted teal
+    "Dark Autumn": ["#3E2723", "#556B2F", "#8B4513", "#A0522D", "#B22222", "#2F4F4F"],  # Espresso, forest green, warm navy, brick red
+    "Light Summer": ["#B0E0E6", "#E6E6FA", "#F0FFF0", "#FFE4E1", "#F5DEB3", "#D8BFD8"],  # Baby blue, lilac, soft mint, rose beige
+    "Cool Summer": ["#708090", "#6A5ACD", "#9370DB", "#4682B4", "#8B7D7B", "#B0C4DE"],  # Slate blue, cool teal, plum, blue-based tones
+    "Dark Winter": ["#000000", "#800020", "#191970", "#4B0082", "#8B008B", "#2F4F4F"],  # Black, burgundy, ink navy, jewel tones
+    "Bright Winter": ["#0000FF", "#FF1493", "#DC143C", "#00CED1", "#8B00FF", "#FF00FF"],  # Electric blue, hot pink, cherry red, bright jewel tones
     "Neutral / Transitional": ["#D2B48C", "#BC8F8F", "#B0C4DE", "#DEB887", "#8FBC8F", "#DDA0DD"]
+}
+
+# Colors to AVOID for each season
+SEASON_AVOID = {
+    "Light Spring": ["#000000", "#708090", "#8B7D7B", "#800020"],  # Black, cool greys, burgundy
+    "Warm Spring": ["#4169E1", "#E6E6FA", "#B0E0E6", "#D8BFD8"],  # Cool blues, lavender, icy pastels
+    "Soft Autumn": ["#000000", "#FF0000", "#E6E6FA", "#F0FFF0"],  # Black, bright red, pastels
+    "Dark Autumn": ["#FFB6C1", "#B0E0E6", "#D3D3D3", "#FFFACD"],  # Powdery pastels, icy greys
+    "Light Summer": ["#FF8C00", "#DAA520", "#B22222", "#FF1493"],  # Orange, mustard, rust, neon
+    "Cool Summer": ["#A0522D", "#808000", "#D2691E", "#DAA520"],  # Warm browns, yellow-greens
+    "Dark Winter": ["#F5DEB3", "#D2B48C", "#FFE4E1", "#A0522D"],  # Beige, camel, dusty pastels, warm browns
+    "Bright Winter": ["#8B7D7B", "#808000", "#BC8F8F", "#FFFACD"],  # Muted neutrals, olive
+    "Neutral / Transitional": []
 }
 
 def get_season(u, v, c):
@@ -390,6 +404,9 @@ def get_season(u, v, c):
 
 def get_recommended_palette(season):
     return SEASON_PALETTES.get(season, SEASON_PALETTES["Neutral / Transitional"])
+
+def get_avoid_colors(season):
+    return SEASON_AVOID.get(season, [])
 
 # Outfit suggestions with image URLs
 OUTFIT_SUGGESTIONS = {
@@ -504,10 +521,11 @@ if uploaded:
     
     # Get recommended colors for this season
     recommended_colors = get_recommended_palette(detected_season)
+    avoid_colors = get_avoid_colors(detected_season)
     
     st.markdown('<div class="results-container">', unsafe_allow_html=True)
     st.markdown(f'<div class="section-title">🎨 Your Recommended Color Palette</div>', unsafe_allow_html=True)
-    st.markdown(f'<p style="color:{TEXT_LIGHT}; font-size:1.1rem; margin-bottom:1.5rem;">Colors that will complement your <strong>{detected_season}</strong> complexion</p>', unsafe_allow_html=True)
+    st.markdown(f'<p style="color:{TEXT_LIGHT}; font-size:1.1rem; margin-bottom:1.5rem;">Colors that will complement your <strong>{detected_season}</strong> complexion based on professional color analysis</p>', unsafe_allow_html=True)
 
     # Display color swatches
     cols = st.columns(len(recommended_colors))
@@ -541,6 +559,45 @@ if uploaded:
     st.dataframe(df, use_container_width=True, hide_index=True)
     st.markdown('</div>', unsafe_allow_html=True)
     
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Colors to Avoid Section
+    if avoid_colors:
+        st.markdown('<div class="results-container">', unsafe_allow_html=True)
+        st.markdown(f'<div class="section-title">❌ Colors to Avoid</div>', unsafe_allow_html=True)
+        st.markdown(f'<p style="color:{TEXT_LIGHT}; font-size:1.1rem; margin-bottom:1.5rem;">These shades may clash with your <strong>{detected_season}</strong> complexion</p>', unsafe_allow_html=True)
+        
+        # Display avoid color swatches
+        cols = st.columns(len(avoid_colors))
+        for col, hex_code in zip(cols, avoid_colors):
+            with col:
+                st.markdown(f"""
+                <div class="swatch" style="background:{hex_code}; opacity:0.7;">
+                    <div style="font-size:1.2rem;">✕</div>
+                    <div class="swatch-hex">{hex_code.upper()}</div>
+                </div>
+                """, unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Color Theory Explanation
+    st.markdown('<div class="results-container">', unsafe_allow_html=True)
+    st.markdown(f'<div class="section-title">🧠 Why These Colors Work for You</div>', unsafe_allow_html=True)
+    
+    # Season-specific explanations
+    explanations = {
+        "Light Spring": "Your complexion has warm, peachy undertones with light value and bright chroma. Light, warm, and clear colors harmonize with your natural coloring. Dark or muted tones would overpower your delicate complexion.",
+        "Warm Spring": "You have golden warmth with medium brightness. Warm reds, yellows, and greens enhance your natural glow. Cool blues and icy pastels clash with your warm undertones.",
+        "Soft Autumn": "Your skin has muted warmth with medium depth. Earthy, softened tones complement your natural harmony. Bright or stark colors appear harsh against your muted coloring.",
+        "Dark Autumn": "You have deep, warm coloring with rich tones. Deep, warm, and earthy colors match your intensity. Light pastels and icy colors wash you out.",
+        "Light Summer": "Your complexion features cool, rosy undertones with light value and soft contrast. Soft, cool pastels enhance your delicate coloring. Warm or bright shades clash with your cool tones.",
+        "Cool Summer": "You have cool undertones with medium depth and muted chroma. Soft, cool, blended colors harmonize beautifully. Warm browns and yellow-based colors create discord.",
+        "Dark Winter": "Your coloring has high contrast with cool undertones and deep value. Bold, cool, saturated colors match your dramatic contrast. Muted or warm neutrals diminish your natural intensity.",
+        "Bright Winter": "You have high contrast with cool undertones and bright chroma. Clear, bright, cool colors complement your vivid coloring. Muted or warm tones dull your natural clarity.",
+        "Neutral / Transitional": "Your coloring has balanced characteristics. You have flexibility with both warm and cool tones, though you may lean slightly in one direction."
+    }
+    
+    st.markdown(f'<p style="color:{TEXT_LIGHT}; font-size:1rem; line-height:1.8;">{explanations.get(detected_season, "")}</p>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
     
     # Outfit Suggestions Section
