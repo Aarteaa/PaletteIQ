@@ -31,9 +31,9 @@ Downloadable Reports: Export color data as CSV
 🚀 Quick Start
 Installation
 
-Clone the repository:
+Clone the repository:https://github.com/Aarteaa/PaletteIQ/edit/main/README.md
 
-bashgit clone https://github.com/YOUR_USERNAME/ai-fashion-color-palette.git
+bashgit clone 
 cd ai-fashion-color-palette
 
 Install dependencies:
