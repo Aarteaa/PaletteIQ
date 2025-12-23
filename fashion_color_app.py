@@ -851,7 +851,7 @@ st.markdown("""
     <p style='color: #666;'>
         🎨 Powered by Machine Learning & Color Theory<br>
         Built with Python • Streamlit • scikit-learn<br>
-        <strong>Portfolio Project by [Your Name]</strong>
+        <strong>Portfolio Project by [Aarti Navale]</strong>
     </p>
 </div>
 """, unsafe_allow_html=True)
