@@ -9,59 +9,59 @@ import os
 
 os.environ["OPENCV_VIDEOIO_PRIORITY_MSMF"] = "0"
 
-# -----------------------------
-# PAGE CONFIG
-# -----------------------------
 st.set_page_config(page_title="PaletteIQ", layout="centered")
 
-# -----------------------------
-# CUSTOM CSS (COLORS + FONT)
-# -----------------------------
+# =============================
+# 🌸 PROPER FASHION CSS
+# =============================
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500&display=swap');
 
-html, body, [class*="css"] {
-    font-family: 'Inter', sans-serif;
+/* FULL BACKGROUND */
+html, body, .stApp {
     background-color: #F4C2C2;
+    font-family: 'Inter', sans-serif;
 }
 
+/* HEADINGS */
 h1, h2, h3 {
     font-family: 'Playfair Display', serif;
     color: #CD5E77;
 }
 
+/* MAIN CONTENT BLOCK */
+.block-container {
+    background-color: #F4C2C2;
+}
+
+/* CARDS */
+.card {
+    background-color: #EBA7AC;
+    padding: 16px;
+    border-radius: 18px;
+    margin-bottom: 14px;
+}
+
+/* BUTTON */
 .stButton>button {
     background-color: #CD5E77;
     color: white;
-    border-radius: 12px;
+    border-radius: 14px;
     border: none;
-    padding: 10px 20px;
+    padding: 10px 22px;
+    font-weight: 500;
 }
 
 .stButton>button:hover {
     background-color: #E17F93;
 }
-
-.upload-box {
-    background-color: #EBA7AC;
-    padding: 20px;
-    border-radius: 16px;
-    text-align: center;
-}
-
-.color-card {
-    background-color: #EE959E;
-    padding: 10px;
-    border-radius: 12px;
-    margin-bottom: 8px;
-}
 </style>
 """, unsafe_allow_html=True)
 
-# -----------------------------
-# FUNCTIONS
-# -----------------------------
+# =============================
+# 🧠 CORE FUNCTIONS
+# =============================
 def preprocess_image(uploaded_file):
     image = Image.open(uploaded_file).convert("RGB")
     image = image.resize((300, 300))
@@ -73,26 +73,35 @@ def extract_dominant_colors(image, k=6):
     kmeans.fit(pixels)
     return kmeans.cluster_centers_.astype(int)
 
-def complementary_color(color):
-    return [255 - c for c in color]
-
-def analogous_colors(color):
-    hsv = cv2.cvtColor(np.uint8([[color]]), cv2.COLOR_RGB2HSV)[0][0]
-    h, s, v = hsv
-    return [
-        cv2.cvtColor(np.uint8([[[ (h + 20) % 180, s, v ]]]), cv2.COLOR_HSV2RGB)[0][0],
-        cv2.cvtColor(np.uint8([[[ (h - 20) % 180, s, v ]]]), cv2.COLOR_HSV2RGB)[0][0]
-    ]
-
 def color_psychology(color):
     r, g, b = color
     if r > 200 and g < 120:
-        return "Confidence & bold femininity"
+        return "Bold, confident, statement-making"
     if b > 150:
-        return "Calm elegance & trust"
+        return "Elegant, calm, luxurious"
     if g > 150:
-        return "Fresh, balanced energy"
-    return "Soft, minimal & versatile"
+        return "Fresh, balanced, natural"
+    return "Soft, romantic, versatile"
+
+def style_suggestion(color):
+    r, g, b = color
+    if r > 200:
+        return "Perfect for evening wear, parties, or statement pieces."
+    if b > 150:
+        return "Ideal for formal looks, office chic, and minimal styling."
+    if g > 150:
+        return "Great for daytime outfits, brunch looks, and casual elegance."
+    return "Works beautifully for neutral layering and soft aesthetics."
+
+def celebrity_match(color):
+    r, g, b = color
+    if r > 200:
+        return "Zendaya • Deepika Padukone • Rihanna"
+    if b > 150:
+        return "Victoria Beckham • Kendall Jenner"
+    if g > 150:
+        return "Emma Watson • Alia Bhatt"
+    return "Hailey Bieber • Rosé (BLACKPINK)"
 
 def show_palette(colors):
     fig, ax = plt.subplots(figsize=(8, 2))
@@ -105,50 +114,37 @@ def show_palette(colors):
     ax.set_ylim(0, 1)
     st.pyplot(fig)
 
-# -----------------------------
-# UI
-# -----------------------------
+# =============================
+# 🎀 UI
+# =============================
 st.title("PaletteIQ")
 st.subheader("AI Fashion Color Palette Generator")
 
-st.markdown("""
-<div class="upload-box">
-Upload a fashion or outfit image to instantly discover
-harmonious color palettes and styling psychology.
-</div>
-""", unsafe_allow_html=True)
-
 uploaded_file = st.file_uploader(
-    "",
+    "Upload an outfit or fashion image",
     type=["jpg", "jpeg", "png"]
 )
 
 if uploaded_file:
     start = time.time()
     image = preprocess_image(uploaded_file)
-
     st.image(image, caption="Uploaded Outfit", use_column_width=True)
 
     colors = extract_dominant_colors(image)
 
-    st.subheader("Dominant Colors & Styling Psychology")
+    st.subheader("🎨 Dominant Colors & Insights")
+
     for color in colors:
-        st.markdown(
-            f"""
-            <div class="color-card">
-                <b>RGB {tuple(color)}</b> — {color_psychology(color)}
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+        st.markdown(f"""
+        <div class="card">
+        <b>RGB {tuple(color)}</b><br>
+        ✨ <b>Psychology:</b> {color_psychology(color)}<br>
+        👗 <b>Styling Tip:</b> {style_suggestion(color)}<br>
+        🌟 <b>Celebrity Vibe:</b> {celebrity_match(color)}
+        </div>
+        """, unsafe_allow_html=True)
 
-    st.subheader("Generated Palette")
+    st.subheader("🎨 Generated Palette")
     show_palette(colors)
-
-    st.subheader("Harmony Suggestions")
-    base = colors[0]
-    st.write("**Base Color:**", tuple(base))
-    st.write("**Complementary:**", tuple(complementary_color(base)))
-    st.write("**Analogous:**", [tuple(c) for c in analogous_colors(base)])
 
     st.success(f"Processed in {round(time.time() - start, 2)} seconds")
