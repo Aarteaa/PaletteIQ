@@ -1,114 +1,154 @@
-import cv2
+import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
 from PIL import Image
+import cv2
 import time
+import os
+
+os.environ["OPENCV_VIDEOIO_PRIORITY_MSMF"] = "0"
 
 # -----------------------------
-# 1. LOAD & PREPROCESS IMAGE
+# PAGE CONFIG
 # -----------------------------
-def load_image(image_path):
-    image = Image.open(image_path)
+st.set_page_config(page_title="PaletteIQ", layout="centered")
+
+# -----------------------------
+# CUSTOM CSS (COLORS + FONT)
+# -----------------------------
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500&display=swap');
+
+html, body, [class*="css"] {
+    font-family: 'Inter', sans-serif;
+    background-color: #F4C2C2;
+}
+
+h1, h2, h3 {
+    font-family: 'Playfair Display', serif;
+    color: #CD5E77;
+}
+
+.stButton>button {
+    background-color: #CD5E77;
+    color: white;
+    border-radius: 12px;
+    border: none;
+    padding: 10px 20px;
+}
+
+.stButton>button:hover {
+    background-color: #E17F93;
+}
+
+.upload-box {
+    background-color: #EBA7AC;
+    padding: 20px;
+    border-radius: 16px;
+    text-align: center;
+}
+
+.color-card {
+    background-color: #EE959E;
+    padding: 10px;
+    border-radius: 12px;
+    margin-bottom: 8px;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# -----------------------------
+# FUNCTIONS
+# -----------------------------
+def preprocess_image(uploaded_file):
+    image = Image.open(uploaded_file).convert("RGB")
     image = image.resize((300, 300))
-    image = np.array(image)
-    return image
+    return np.array(image)
 
-
-# -----------------------------
-# 2. RGB → HSV CONVERSION
-# -----------------------------
-def rgb_to_hsv(image):
-    return cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
-
-
-# -----------------------------
-# 3. K-MEANS COLOR EXTRACTION
-# -----------------------------
 def extract_dominant_colors(image, k=6):
     pixels = image.reshape((-1, 3))
-
     kmeans = KMeans(n_clusters=k, random_state=42)
     kmeans.fit(pixels)
+    return kmeans.cluster_centers_.astype(int)
 
-    colors = kmeans.cluster_centers_.astype(int)
-    labels = kmeans.labels_
-
-    return colors, labels
-
-
-# -----------------------------
-# 4. COLOR HARMONY RULES
-# -----------------------------
 def complementary_color(color):
-    return [255 - color[0], 255 - color[1], 255 - color[2]]
+    return [255 - c for c in color]
 
 def analogous_colors(color):
     hsv = cv2.cvtColor(np.uint8([[color]]), cv2.COLOR_RGB2HSV)[0][0]
-    h = hsv[0]
-
+    h, s, v = hsv
     return [
-        cv2.cvtColor(np.uint8([[[ (h+20)%180, hsv[1], hsv[2] ]]]), cv2.COLOR_HSV2RGB)[0][0],
-        cv2.cvtColor(np.uint8([[[ (h-20)%180, hsv[1], hsv[2] ]]]), cv2.COLOR_HSV2RGB)[0][0]
+        cv2.cvtColor(np.uint8([[[ (h + 20) % 180, s, v ]]]), cv2.COLOR_HSV2RGB)[0][0],
+        cv2.cvtColor(np.uint8([[[ (h - 20) % 180, s, v ]]]), cv2.COLOR_HSV2RGB)[0][0]
     ]
 
-
-# -----------------------------
-# 5. COLOR PSYCHOLOGY
-# -----------------------------
 def color_psychology(color):
     r, g, b = color
-    if r > 200 and g < 100:
-        return "Confidence, power, boldness"
+    if r > 200 and g < 120:
+        return "Confidence & bold femininity"
     if b > 150:
-        return "Calm, trust, elegance"
+        return "Calm elegance & trust"
     if g > 150:
-        return "Freshness, growth, balance"
-    return "Neutral, minimal, versatile"
+        return "Fresh, balanced energy"
+    return "Soft, minimal & versatile"
 
-
-# -----------------------------
-# 6. VISUALIZE PALETTE
-# -----------------------------
-def plot_palette(colors):
-    plt.figure(figsize=(8, 2))
-    plt.axis('off')
-
+def show_palette(colors):
+    fig, ax = plt.subplots(figsize=(8, 2))
+    ax.axis("off")
     for i, color in enumerate(colors):
-        plt.fill_between([i, i+1], 0, 1, color=np.array(color)/255)
-
-    plt.show()
-
-
-# -----------------------------
-# 7. MAIN PIPELINE
-# -----------------------------
-def run_palette_generator(image_path):
-    start_time = time.time()
-
-    image = load_image(image_path)
-    hsv_image = rgb_to_hsv(image)
-
-    colors, labels = extract_dominant_colors(image, k=6)
-
-    print("\n🎨 Dominant Colors (RGB):")
-    for idx, color in enumerate(colors):
-        print(f"{idx+1}. {color} → {color_psychology(color)}")
-
-    print("\n✨ Harmony Suggestions:")
-    for color in colors[:2]:
-        print(f"Base: {color}")
-        print("Complementary:", complementary_color(color))
-        print("Analogous:", analogous_colors(color))
-        print()
-
-    plot_palette(colors)
-
-    print(f"⏱️ Processing Time: {round(time.time() - start_time, 2)} seconds")
-
+        ax.add_patch(
+            plt.Rectangle((i, 0), 1, 1, color=np.array(color) / 255)
+        )
+    ax.set_xlim(0, len(colors))
+    ax.set_ylim(0, 1)
+    st.pyplot(fig)
 
 # -----------------------------
-# 8. RUN
+# UI
 # -----------------------------
-if __name__ == "__main__":
-    run_palette_generator("sample_images/outfit.jpg")
+st.title("PaletteIQ")
+st.subheader("AI Fashion Color Palette Generator")
+
+st.markdown("""
+<div class="upload-box">
+Upload a fashion or outfit image to instantly discover
+harmonious color palettes and styling psychology.
+</div>
+""", unsafe_allow_html=True)
+
+uploaded_file = st.file_uploader(
+    "",
+    type=["jpg", "jpeg", "png"]
+)
+
+if uploaded_file:
+    start = time.time()
+    image = preprocess_image(uploaded_file)
+
+    st.image(image, caption="Uploaded Outfit", use_column_width=True)
+
+    colors = extract_dominant_colors(image)
+
+    st.subheader("Dominant Colors & Styling Psychology")
+    for color in colors:
+        st.markdown(
+            f"""
+            <div class="color-card">
+                <b>RGB {tuple(color)}</b> — {color_psychology(color)}
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+    st.subheader("Generated Palette")
+    show_palette(colors)
+
+    st.subheader("Harmony Suggestions")
+    base = colors[0]
+    st.write("**Base Color:**", tuple(base))
+    st.write("**Complementary:**", tuple(complementary_color(base)))
+    st.write("**Analogous:**", [tuple(c) for c in analogous_colors(base)])
+
+    st.success(f"Processed in {round(time.time() - start, 2)} seconds")
