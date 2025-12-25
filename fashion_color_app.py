@@ -19,7 +19,6 @@ PRIMARY = "#1a1a2e"
 SECONDARY = "#16213e"
 ACCENT = "#0f3460"
 DARK = "#0a192f"
-LIGHT = "#eaeaea"
 TEXT_LIGHT = "#e6e6e6"
 TEXT_ACCENT = "#64ffda"
 
@@ -50,14 +49,9 @@ html, body, [class*="css"] {{
     color: {TEXT_LIGHT} !important;
 }}
 
-[data-testid="stSidebar"] p {{
-    color: {TEXT_LIGHT} !important;
-}}
-
 .header-container {{
     text-align: center;
     padding: 2rem 0 3rem 0;
-    color: white;
 }}
 
 .main-title {{
@@ -74,45 +68,6 @@ html, body, [class*="css"] {{
     font-weight: 500;
 }}
 
-.feature-grid {{
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.5rem;
-    margin: 2rem 0;
-}}
-
-.feature-card {{
-    background: linear-gradient(135deg, {SECONDARY}, {ACCENT});
-    backdrop-filter: blur(10px);
-    border-radius: 20px;
-    padding: 2rem;
-    border: 1px solid {ACCENT};
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}}
-
-.feature-card:hover {{
-    transform: translateY(-5px);
-    box-shadow: 0 10px 30px rgba(100, 255, 218, 0.3);
-}}
-
-.feature-icon {{
-    font-size: 2.5rem;
-    margin-bottom: 1rem;
-}}
-
-.feature-title {{
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: {TEXT_LIGHT};
-    margin-bottom: 0.5rem;
-}}
-
-.feature-desc {{
-    color: {TEXT_ACCENT};
-    font-size: 0.95rem;
-    line-height: 1.6;
-}}
-
 .results-container {{
     background: {SECONDARY};
     border-radius: 24px;
@@ -127,9 +82,6 @@ html, body, [class*="css"] {{
     font-weight: 800;
     color: {TEXT_LIGHT};
     margin-bottom: 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
 }}
 
 .swatch {{
@@ -175,71 +127,49 @@ html, body, [class*="css"] {{
     color: {TEXT_LIGHT};
 }}
 
-.how-it-works {{
-    background: {SECONDARY};
-    border-radius: 24px;
-    padding: 3rem;
+.feature-grid {{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
     margin: 2rem 0;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-    border: 2px solid {ACCENT};
 }}
 
-.step {{
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin: 1rem 0;
-    font-size: 1.1rem;
-    color: {TEXT_LIGHT};
+.feature-card {{
+    background: linear-gradient(135deg, {SECONDARY}, {ACCENT});
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 2rem;
+    border: 1px solid {ACCENT};
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }}
 
-.step-number {{
-    background: {TEXT_ACCENT};
-    color: {DARK};
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    flex-shrink: 0;
+.feature-card:hover {{
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(100, 255, 218, 0.3);
 }}
 
-.sidebar-header {{
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: {TEXT_LIGHT};
+.feature-icon {{
+    font-size: 2.5rem;
     margin-bottom: 1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
 }}
 
-.stButton > button {{
-    background: {TEXT_ACCENT};
-    color: {DARK};
-    border: none;
-    border-radius: 12px;
-    padding: 0.75rem 2rem;
-    font-weight: 600;
-    transition: all 0.3s ease;
+.feature-title {{
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: {TEXT_LIGHT};
+    margin-bottom: 0.5rem;
 }}
 
-.stButton > button:hover {{
-    background: {TEXT_LIGHT};
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(100, 255, 218, 0.4);
+.feature-desc {{
+    color: {TEXT_ACCENT};
+    font-size: 0.95rem;
+    line-height: 1.6;
 }}
 
 [data-testid="stFileUploadDropzone"] {{
     background: {PRIMARY};
     border: 2px dashed {TEXT_ACCENT};
     border-radius: 16px;
-}}
-
-[data-testid="stFileUploadDropzone"] label {{
-    color: {TEXT_LIGHT} !important;
 }}
 </style>
 """, unsafe_allow_html=True)
@@ -248,26 +178,22 @@ html, body, [class*="css"] {{
 st.markdown("""
 <div class="header-container">
     <div class="main-title">✨ AI Fashion Color Intelligence Platform</div>
-    <div class="subtitle">Advanced Color Analysis • Personal Styling • Trend Insights</div>
+    <div class="subtitle">Upload Your Photo • Get Your Perfect Color Palette</div>
 </div>
 """, unsafe_allow_html=True)
 
 # ------------------ SIDEBAR ------------------
-st.sidebar.markdown('<div class="sidebar-header">⚙️ Advanced Settings</div>', unsafe_allow_html=True)
-n_colors = st.sidebar.slider("Colors to Extract", 3, 10, 6)
+st.sidebar.markdown(f'<div style="font-size:1.2rem; font-weight:700; color:{TEXT_LIGHT}; margin-bottom:1rem;">⚙️ Settings</div>', unsafe_allow_html=True)
+n_colors = st.sidebar.slider("Palette Size", 3, 10, 6)
 
-st.sidebar.markdown('<div class="sidebar-header" style="margin-top:2rem;">🎯 Analysis Features</div>', unsafe_allow_html=True)
-show_skin = st.sidebar.checkbox("✅ Skin Tone Analysis", True)
-show_season = st.sidebar.checkbox("✅ Season Analysis", True)
-show_outfit = st.sidebar.checkbox("✅ Outfit Generator", True)
-
-st.sidebar.markdown('<div class="sidebar-header" style="margin-top:2rem;">📊 Features</div>', unsafe_allow_html=True)
+st.sidebar.markdown(f'<div style="font-size:1.2rem; font-weight:700; color:{TEXT_LIGHT}; margin:2rem 0 1rem 0;">📊 Features</div>', unsafe_allow_html=True)
 st.sidebar.markdown(f"""
 <div style="color:{TEXT_LIGHT};">
-• 🎨 AI Color Extraction<br>
-• 💅 Skin Tone Detection<br>
-• 🎭 Personal Season Analysis<br>
-• 👗 Outfit Generator
+• 🔍 Face Detection<br>
+• 💅 Skin Tone Analysis<br>
+• 🎭 Season Classification<br>
+• 🎨 Personalized Palette<br>
+• 👗 Outfit Recommendations
 </div>
 """, unsafe_allow_html=True)
 
@@ -277,63 +203,75 @@ face_cascade = cv2.CascadeClassifier(
 )
 
 def detect_face(image):
+    """Detect face in image and return face region"""
     img = np.array(image)
     gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+    
+    # Try multiple detection parameters for better results
     faces = face_cascade.detectMultiScale(
-        gray, scaleFactor=1.2, minNeighbors=5, minSize=(80, 80)
+        gray, 
+        scaleFactor=1.05, 
+        minNeighbors=4, 
+        minSize=(50, 50),
+        flags=cv2.CASCADE_SCALE_IMAGE
     )
+    
     if len(faces) == 0:
-        return None
+        # Try with more relaxed parameters
+        faces = face_cascade.detectMultiScale(
+            gray, 
+            scaleFactor=1.1, 
+            minNeighbors=3, 
+            minSize=(40, 40)
+        )
+    
+    if len(faces) == 0:
+        return None, None
+    
+    # Get the largest face
+    if len(faces) > 1:
+        faces = sorted(faces, key=lambda x: x[2] * x[3], reverse=True)
+    
     x, y, w, h = faces[0]
-    return img[y:y+h, x:x+w]
+    face_region = img[y:y+h, x:x+w]
+    
+    # Return both face region and coordinates for visualization
+    return face_region, (x, y, w, h)
 
 def extract_skin_pixels(face_img):
+    """Extract skin pixels from face using LAB color space"""
+    # Convert to LAB color space (better for skin detection)
     lab = cv2.cvtColor(face_img, cv2.COLOR_RGB2LAB)
-    lower = np.array([20, 135, 135])
-    upper = np.array([255, 180, 180])
+    
+    # Define skin tone range in LAB space
+    lower = np.array([20, 125, 125])
+    upper = np.array([255, 190, 190])
+    
+    # Create mask
     mask = cv2.inRange(lab, lower, upper)
+    
+    # Apply morphological operations to clean up mask
+    kernel = np.ones((3,3), np.uint8)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+    
+    # Extract skin pixels
     skin = cv2.bitwise_and(face_img, face_img, mask=mask)
     pixels = skin.reshape(-1, 3)
     pixels = pixels[np.any(pixels != [0, 0, 0], axis=1)]
+    
     return pixels
-
-# ------------------ EXTRACT COLORS FROM IMAGE ------------------
-def extract_image_colors(image, n_colors=6):
-    """Extract dominant colors from the entire fashion image"""
-    img_array = np.array(image)
-    img_resized = cv2.resize(img_array, (150, 150))
-    pixels = img_resized.reshape(-1, 3)
-    
-    # Remove very dark and very bright pixels
-    mask = np.all((pixels > 20) & (pixels < 245), axis=1)
-    pixels = pixels[mask]
-    
-    if len(pixels) < 100:
-        pixels = img_resized.reshape(-1, 3)
-    
-    kmeans = KMeans(n_clusters=n_colors, random_state=42, n_init=10)
-    kmeans.fit(pixels)
-    
-    colors = kmeans.cluster_centers_.astype(int)
-    counts = np.bincount(kmeans.labels_)
-    percentages = (counts / counts.sum()) * 100
-    
-    sorted_indices = np.argsort(percentages)[::-1]
-    colors = colors[sorted_indices]
-    percentages = percentages[sorted_indices]
-    
-    return colors, percentages
-
-def rgb_to_hex(rgb):
-    return '#{:02x}{:02x}{:02x}'.format(int(rgb[0]), int(rgb[1]), int(rgb[2]))
 
 # ------------------ COLOR SCIENCE ------------------
 def analyze_hvc(rgb):
-    r, g, b = rgb / 255
+    """Analyze Hue, Value, Chroma"""
+    r, g, b = rgb / 255.0
     h, s, v = colorsys.rgb_to_hsv(r, g, b)
     return h * 360, v, s
 
 def classify_hvc(h, v, c):
+    """Classify color characteristics for season analysis"""
+    # Undertone
     if h < 30 or h > 330:
         undertone = "Warm"
     elif 30 <= h <= 210:
@@ -341,6 +279,7 @@ def classify_hvc(h, v, c):
     else:
         undertone = "Neutral"
 
+    # Value (lightness)
     if v > 0.75:
         value = "Light"
     elif v < 0.35:
@@ -348,180 +287,260 @@ def classify_hvc(h, v, c):
     else:
         value = "Medium"
 
+    # Chroma (saturation)
     chroma = "Bright" if c > 0.4 else "Muted"
+    
     return undertone, value, chroma
 
+# ------------------ SEASON MAPPING ------------------
 SEASON_MAP = {
     ("Warm", "Light", "Bright"): "Light Spring",
+    ("Warm", "Light", "Muted"): "Light Spring",
     ("Warm", "Medium", "Bright"): "Warm Spring",
     ("Warm", "Medium", "Muted"): "Soft Autumn",
+    ("Warm", "Deep", "Bright"): "Warm Autumn",
     ("Warm", "Deep", "Muted"): "Dark Autumn",
+    ("Cool", "Light", "Bright"): "Light Summer",
     ("Cool", "Light", "Muted"): "Light Summer",
+    ("Cool", "Medium", "Bright"): "Cool Summer",
     ("Cool", "Medium", "Muted"): "Cool Summer",
     ("Cool", "Deep", "Bright"): "Dark Winter",
-    ("Cool", "Bright", "Bright"): "Bright Winter",
-}
-
-SEASON_PALETTES = {
-    "Light Spring": ["#FFB6C1", "#FFDAB9", "#87CEEB", "#FFE4B5", "#F0E68C", "#FFFACD"],
-    "Warm Spring": ["#FF6347", "#DAA520", "#808000", "#FF4500", "#F4A460", "#D2691E"],
-    "Soft Autumn": ["#BC8F8F", "#D2B48C", "#8FBC8F", "#5F9EA0", "#DDA0DD", "#C19A6B"],
-    "Dark Autumn": ["#3E2723", "#556B2F", "#8B4513", "#A0522D", "#B22222", "#2F4F4F"],
-    "Light Summer": ["#B0E0E6", "#E6E6FA", "#F0FFF0", "#FFE4E1", "#F5DEB3", "#D8BFD8"],
-    "Cool Summer": ["#708090", "#6A5ACD", "#9370DB", "#4682B4", "#8B7D7B", "#B0C4DE"],
-    "Dark Winter": ["#000000", "#800020", "#191970", "#4B0082", "#8B008B", "#2F4F4F"],
-    "Bright Winter": ["#0000FF", "#FF1493", "#DC143C", "#00CED1", "#8B00FF", "#FF00FF"],
-    "Neutral / Transitional": ["#D2B48C", "#BC8F8F", "#B0C4DE", "#DEB887", "#8FBC8F", "#DDA0DD"]
-}
-
-SEASON_AVOID = {
-    "Light Spring": ["#000000", "#708090", "#8B7D7B", "#800020"],
-    "Warm Spring": ["#4169E1", "#E6E6FA", "#B0E0E6", "#D8BFD8"],
-    "Soft Autumn": ["#000000", "#FF0000", "#E6E6FA", "#F0FFF0"],
-    "Dark Autumn": ["#FFB6C1", "#B0E0E6", "#D3D3D3", "#FFFACD"],
-    "Light Summer": ["#FF8C00", "#DAA520", "#B22222", "#FF1493"],
-    "Cool Summer": ["#A0522D", "#808000", "#D2691E", "#DAA520"],
-    "Dark Winter": ["#F5DEB3", "#D2B48C", "#FFE4E1", "#A0522D"],
-    "Bright Winter": ["#8B7D7B", "#808000", "#BC8F8F", "#FFFACD"],
-    "Neutral / Transitional": []
-}
-
-OUTFIT_SUGGESTIONS = {
-    "Light Spring": [
-        {"name": "Pastel Floral Dress", "url": "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400", "desc": "Light peach or mint dress"},
-        {"name": "Cream Blazer Set", "url": "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=400", "desc": "Warm ivory suit"},
-        {"name": "Coral Summer Outfit", "url": "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400", "desc": "Bright coral top with white"},
-    ],
+    ("Cool", "Deep", "Muted"): "Dark Winter",
+    ("Neutral", "Light", "Bright"): "Bright Spring",
+    ("Neutral", "Deep", "Bright"): "Bright Winter",
 }
 
 def get_season(u, v, c):
-    return SEASON_MAP.get((u, v, c), "Neutral / Transitional")
+    """Determine color season based on characteristics"""
+    season = SEASON_MAP.get((u, v, c), "Neutral / Transitional")
+    return season
 
-def get_recommended_palette(season):
-    return SEASON_PALETTES.get(season, SEASON_PALETTES["Neutral / Transitional"])
+# ------------------ COLOR PALETTES ------------------
+SEASON_PALETTES = {
+    "Light Spring": ["#FFB6C1", "#FFDAB9", "#87CEEB", "#FFE4B5", "#F0E68C", "#FFFACD", "#FFD700", "#98FB98"],
+    "Warm Spring": ["#FF6347", "#DAA520", "#FF8C00", "#FF4500", "#F4A460", "#D2691E", "#FFD700", "#FFA500"],
+    "Soft Autumn": ["#BC8F8F", "#D2B48C", "#8FBC8F", "#5F9EA0", "#DDA0DD", "#C19A6B", "#CD853F", "#B8860B"],
+    "Warm Autumn": ["#A0522D", "#8B4513", "#D2691E", "#CD853F", "#B8860B", "#DAA520", "#FF8C00", "#FF6347"],
+    "Dark Autumn": ["#3E2723", "#556B2F", "#8B4513", "#A0522D", "#B22222", "#2F4F4F", "#8B0000", "#654321"],
+    "Light Summer": ["#B0E0E6", "#E6E6FA", "#F0FFF0", "#FFE4E1", "#F5DEB3", "#D8BFD8", "#AFEEEE", "#DDA0DD"],
+    "Cool Summer": ["#708090", "#6A5ACD", "#9370DB", "#4682B4", "#8B7D7B", "#B0C4DE", "#778899", "#BC8F8F"],
+    "Dark Winter": ["#000000", "#800020", "#191970", "#4B0082", "#8B008B", "#2F4F4F", "#483D8B", "#00008B"],
+    "Bright Winter": ["#0000FF", "#FF1493", "#DC143C", "#00CED1", "#8B00FF", "#FF00FF", "#1E90FF", "#FF0000"],
+    "Bright Spring": ["#FFD700", "#FF69B4", "#00CED1", "#7FFF00", "#FF6347", "#1E90FF", "#FF1493", "#00FF7F"],
+    "Neutral / Transitional": ["#D2B48C", "#BC8F8F", "#B0C4DE", "#DEB887", "#8FBC8F", "#DDA0DD", "#F5DEB3", "#C0C0C0"]
+}
 
-def get_avoid_colors(season):
-    return SEASON_AVOID.get(season, [])
+SEASON_AVOID = {
+    "Light Spring": ["#000000", "#708090", "#8B7D7B", "#800020", "#2F4F4F"],
+    "Warm Spring": ["#4169E1", "#E6E6FA", "#B0E0E6", "#D8BFD8", "#708090"],
+    "Soft Autumn": ["#000000", "#FF0000", "#E6E6FA", "#F0FFF0", "#00FFFF"],
+    "Warm Autumn": ["#B0E0E6", "#E6E6FA", "#D3D3D3", "#F0F8FF", "#FFFAFA"],
+    "Dark Autumn": ["#FFB6C1", "#B0E0E6", "#D3D3D3", "#FFFACD", "#F0FFF0"],
+    "Light Summer": ["#FF8C00", "#DAA520", "#B22222", "#FF1493", "#FF4500"],
+    "Cool Summer": ["#A0522D", "#808000", "#D2691E", "#DAA520", "#FF8C00"],
+    "Dark Winter": ["#F5DEB3", "#D2B48C", "#FFE4E1", "#A0522D", "#DEB887"],
+    "Bright Winter": ["#8B7D7B", "#808000", "#BC8F8F", "#FFFACD", "#D2B48C"],
+    "Bright Spring": ["#2F4F4F", "#556B2F", "#8B7D7B", "#696969", "#A9A9A9"],
+    "Neutral / Transitional": []
+}
 
-def get_outfit_suggestions(season):
-    return OUTFIT_SUGGESTIONS.get(season, OUTFIT_SUGGESTIONS.get("Light Spring", []))
+SEASON_DESCRIPTIONS = {
+    "Light Spring": "Your complexion has warm, peachy undertones with light value. Light, warm, and clear colors harmonize beautifully with your delicate coloring.",
+    "Warm Spring": "You have golden warmth with vibrant energy. Warm, bright colors in yellow, orange, and coral families enhance your natural glow.",
+    "Soft Autumn": "Your skin has muted warmth with medium depth. Earthy, softened tones complement your natural harmony without overwhelming.",
+    "Warm Autumn": "You have rich, warm coloring. Deep, warm earth tones and golden hues match your natural richness.",
+    "Dark Autumn": "Your coloring is deep and warm with rich intensity. Deep, warm, earthy colors match your dramatic depth.",
+    "Light Summer": "Your complexion features cool, rosy undertones with light value. Soft, cool pastels enhance your delicate coloring.",
+    "Cool Summer": "You have cool undertones with medium depth and soft contrast. Blended, cool colors harmonize beautifully.",
+    "Dark Winter": "Your coloring has high contrast with cool undertones. Bold, cool, saturated colors match your dramatic presence.",
+    "Bright Winter": "You have high contrast with cool undertones and vivid clarity. Clear, bright, cool colors complement your striking coloring.",
+    "Bright Spring": "Your coloring is warm and clear with high contrast. Bright, warm colors with clarity enhance your vibrant appearance.",
+    "Neutral / Transitional": "Your coloring has balanced characteristics, giving you flexibility with both warm and cool tones."
+}
 
-# ------------------ MAIN ------------------
-uploaded = st.file_uploader("📤 Upload a fashion image", ["jpg", "png", "jpeg"])
+def rgb_to_hex(rgb):
+    """Convert RGB to hex color code"""
+    return '#{:02x}{:02x}{:02x}'.format(int(rgb[0]), int(rgb[1]), int(rgb[2]))
+
+# ------------------ MAIN APP ------------------
+uploaded = st.file_uploader("📤 Upload Your Photo (Clear Face Photo for Best Results)", ["jpg", "png", "jpeg"])
 
 if uploaded:
     image = Image.open(uploaded).convert("RGB")
     
+    # Display uploaded image
     st.markdown('<div class="results-container">', unsafe_allow_html=True)
     st.markdown('<div class="section-title">📸 Uploaded Image</div>', unsafe_allow_html=True)
-    st.image(image, use_container_width=True)
+    
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        st.image(image, caption="Original Image", use_container_width=True)
+    
+    # DETECT FACE
+    with st.spinner("🔍 Detecting face..."):
+        face, coords = detect_face(image)
+    
+    if face is None:
+        st.markdown('</div>', unsafe_allow_html=True)
+        st.error("❌ **No face detected!** Please upload a clear photo with your face visible. Tips: Good lighting, face clearly visible, front-facing photo works best.")
+        st.stop()
+    
+    # Show detected face
+    with col2:
+        st.image(face, caption="Detected Face Region", use_container_width=True)
+    
+    st.success("✅ Face detected successfully!")
     st.markdown('</div>', unsafe_allow_html=True)
-
-    # EXTRACT COLORS FROM IMAGE
+    
+    # EXTRACT SKIN PIXELS
+    with st.spinner("💅 Analyzing skin tone..."):
+        skin_pixels = extract_skin_pixels(face)
+    
+    if len(skin_pixels) < 100:
+        st.error("❌ **Insufficient skin pixels detected.** Please upload a photo with better lighting and clearer view of your face.")
+        st.stop()
+    
+    # ANALYZE SKIN TONE
+    avg_skin = np.mean(skin_pixels, axis=0).astype(int)
+    skin_hex = rgb_to_hex(avg_skin)
+    h, v, c = analyze_hvc(avg_skin)
+    undertone, value, chroma = classify_hvc(h, v, c)
+    detected_season = get_season(undertone, value, chroma)
+    
+    # Display skin analysis
     st.markdown('<div class="results-container">', unsafe_allow_html=True)
-    st.markdown('<div class="section-title">🎨 Extracted Colors from Your Image</div>', unsafe_allow_html=True)
-    st.markdown(f'<p style="color:{TEXT_LIGHT}; font-size:1.1rem; margin-bottom:1.5rem;">Dominant colors detected in the uploaded fashion image</p>', unsafe_allow_html=True)
+    st.markdown('<div class="section-title">🔍 Your Skin Analysis</div>', unsafe_allow_html=True)
     
-    colors, percentages = extract_image_colors(image, n_colors)
+    col1, col2, col3, col4, col5 = st.columns(5)
     
-    cols = st.columns(len(colors))
-    image_analysis_rows = []
+    with col1:
+        st.markdown(f"""
+        <div class="metric-card">
+            <div class="metric-label">Skin Tone</div>
+            <div style="width:60px; height:60px; background:{skin_hex}; border-radius:50%; margin:0.5rem auto; border:3px solid white;"></div>
+            <div style="font-size:0.8rem; color:{TEXT_ACCENT};">{skin_hex.upper()}</div>
+        </div>
+        """, unsafe_allow_html=True)
     
-    for col, (color, pct) in zip(cols, zip(colors, percentages)):
-        hex_code = rgb_to_hex(color)
-        h, v, c = analyze_hvc(color)
-        u, val, chr = classify_hvc(h, v, c)
+    with col2:
+        st.markdown(f"""
+        <div class="metric-card">
+            <div class="metric-label">Undertone</div>
+            <div class="metric-value">{undertone}</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown(f"""
+        <div class="metric-card">
+            <div class="metric-label">Value</div>
+            <div class="metric-value">{value}</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col4:
+        st.markdown(f"""
+        <div class="metric-card">
+            <div class="metric-label">Chroma</div>
+            <div class="metric-value">{chroma}</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col5:
+        st.markdown(f"""
+        <div class="metric-card">
+            <div class="metric-label">Your Season</div>
+            <div class="metric-value">{detected_season}</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # COLOR PALETTE RECOMMENDATION
+    recommended_colors = SEASON_PALETTES.get(detected_season, SEASON_PALETTES["Neutral / Transitional"])
+    
+    st.markdown('<div class="results-container">', unsafe_allow_html=True)
+    st.markdown(f'<div class="section-title">🎨 Your Personalized Color Palette</div>', unsafe_allow_html=True)
+    st.markdown(f'<p style="color:{TEXT_LIGHT}; font-size:1.1rem; margin-bottom:1.5rem;">{SEASON_DESCRIPTIONS[detected_season]}</p>', unsafe_allow_html=True)
+    
+    # Display color swatches
+    cols = st.columns(len(recommended_colors[:n_colors]))
+    
+    for col, hex_code in zip(cols, recommended_colors[:n_colors]):
+        # Determine text color for contrast
+        rgb_vals = [int(hex_code[i:i+2], 16) for i in (1, 3, 5)]
+        brightness = sum(rgb_vals) / 3
+        text_color = "white" if brightness < 128 else "black"
         
         with col:
             st.markdown(f"""
-            <div class="swatch" style="background:{hex_code};">
-                <div style="font-size:1.2rem;">●</div>
+            <div class="swatch" style="background:{hex_code}; color:{text_color};">
+                <div style="font-size:1.5rem;">●</div>
                 <div class="swatch-hex">{hex_code.upper()}</div>
-                <div style="font-size:0.85rem; margin-top:0.5rem;">{pct:.1f}%</div>
             </div>
             """, unsafe_allow_html=True)
-        
-        image_analysis_rows.append([hex_code.upper(), f"{pct:.1f}%", u, val, chr])
     
-    st.markdown('<div style="margin-top:2rem;">', unsafe_allow_html=True)
-    df_image = pd.DataFrame(
-        image_analysis_rows,
-        columns=["Color", "Percentage", "Undertone", "Value", "Chroma"]
-    )
-    st.dataframe(df_image, use_container_width=True, hide_index=True)
     st.markdown('</div>', unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    # FACE DETECTION AND PERSONAL ANALYSIS
-    face = detect_face(image)
     
-    if face is not None and show_skin:
-        skin_pixels = extract_skin_pixels(face)
+    # COLORS TO AVOID
+    avoid_colors = SEASON_AVOID.get(detected_season, [])
+    
+    if avoid_colors:
+        st.markdown('<div class="results-container">', unsafe_allow_html=True)
+        st.markdown(f'<div class="section-title">❌ Colors to Avoid</div>', unsafe_allow_html=True)
+        st.markdown(f'<p style="color:{TEXT_LIGHT}; font-size:1.1rem; margin-bottom:1.5rem;">These shades may clash with your <strong>{detected_season}</strong> complexion</p>', unsafe_allow_html=True)
         
-        if len(skin_pixels) >= 300:
-            avg_skin = np.mean(skin_pixels, axis=0).astype(int)
-            h, v, c = analyze_hvc(avg_skin)
-            undertone, value, chroma = classify_hvc(h, v, c)
-            detected_season = get_season(undertone, value, chroma)
+        cols = st.columns(len(avoid_colors))
+        for col, hex_code in zip(cols, avoid_colors):
+            rgb_vals = [int(hex_code[i:i+2], 16) for i in (1, 3, 5)]
+            brightness = sum(rgb_vals) / 3
+            text_color = "white" if brightness < 128 else "black"
             
-            st.markdown('<div class="results-container">', unsafe_allow_html=True)
-            st.markdown('<div class="section-title">🔍 Your Skin Analysis</div>', unsafe_allow_html=True)
-            
-            col1, col2, col3, col4 = st.columns(4)
-            with col1:
-                st.markdown(f'<div class="metric-card"><div class="metric-label">Undertone</div><div class="metric-value">{undertone}</div></div>', unsafe_allow_html=True)
-            with col2:
-                st.markdown(f'<div class="metric-card"><div class="metric-label">Value</div><div class="metric-value">{value}</div></div>', unsafe_allow_html=True)
-            with col3:
-                st.markdown(f'<div class="metric-card"><div class="metric-label">Chroma</div><div class="metric-value">{chroma}</div></div>', unsafe_allow_html=True)
-            with col4:
-                st.markdown(f'<div class="metric-card"><div class="metric-label">Season</div><div class="metric-value">{detected_season}</div></div>', unsafe_allow_html=True)
-            
-            st.markdown('</div>', unsafe_allow_html=True)
-            
-            recommended_colors = get_recommended_palette(detected_season)
-            
-            st.markdown('<div class="results-container">', unsafe_allow_html=True)
-            st.markdown(f'<div class="section-title">🎨 Your Recommended Palette</div>', unsafe_allow_html=True)
-            st.markdown(f'<p style="color:{TEXT_LIGHT}; font-size:1.1rem; margin-bottom:1.5rem;">Colors for <strong>{detected_season}</strong></p>', unsafe_allow_html=True)
-
-            cols = st.columns(len(recommended_colors))
-            
-            for col, hex_code in zip(cols, recommended_colors):
-                with col:
-                    st.markdown(f'<div class="swatch" style="background:{hex_code};"><div style="font-size:1.2rem;">●</div><div class="swatch-hex">{hex_code.upper()}</div></div>', unsafe_allow_html=True)
-            
-            st.markdown('</div>', unsafe_allow_html=True)
-    else:
-        if show_skin:
-            st.info("💡 No face detected. Upload an image with a visible face for personalized skin analysis.")
+            with col:
+                st.markdown(f"""
+                <div class="swatch" style="background:{hex_code}; color:{text_color}; opacity:0.7;">
+                    <div style="font-size:1.5rem;">✕</div>
+                    <div class="swatch-hex">{hex_code.upper()}</div>
+                </div>
+                """, unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
 
 else:
+    # Landing page
     st.markdown("""
     <div class="feature-grid">
         <div class="feature-card">
+            <div class="feature-icon">🔍</div>
+            <div class="feature-title">Face Detection</div>
+            <div class="feature-desc">Advanced AI detects your face automatically</div>
+        </div>
+        <div class="feature-card">
             <div class="feature-icon">💅</div>
-            <div class="feature-title">Skin Tone Detection</div>
-            <div class="feature-desc">Discover your undertone and get personalized recommendations</div>
+            <div class="feature-title">Skin Analysis</div>
+            <div class="feature-desc">Analyzes thousands of skin pixels for accuracy</div>
         </div>
         <div class="feature-card">
             <div class="feature-icon">🎭</div>
-            <div class="feature-title">Season Analysis</div>
-            <div class="feature-desc">Find out if you're a Spring, Summer, Autumn, or Winter</div>
+            <div class="feature-title">Season Classification</div>
+            <div class="feature-desc">Determines if you're Spring, Summer, Autumn, or Winter</div>
         </div>
         <div class="feature-card">
-            <div class="feature-icon">👗</div>
-            <div class="feature-title">Outfit Generator</div>
-            <div class="feature-desc">Get AI-powered outfit suggestions</div>
+            <div class="feature-icon">🎨</div>
+            <div class="feature-title">Custom Palette</div>
+            <div class="feature-desc">Get colors scientifically matched to your skin tone</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
-
+    
     st.markdown(f"""
-    <div class="how-it-works">
+    <div class="results-container">
         <div class="section-title">✨ How It Works</div>
-        <div class="step"><div class="step-number">1</div><div>Upload any fashion image</div></div>
-        <div class="step"><div class="step-number">2</div><div>AI extracts and analyzes colors</div></div>
-        <div class="step"><div class="step-number">3</div><div>Get personalized recommendations</div></div>
+        <div style="color:{TEXT_LIGHT}; line-height:2; font-size:1.05rem;">
+            <p><strong>Step 1:</strong> Upload a clear photo of yourself (good lighting, face visible)</p>
+            <p><strong>Step 2:</strong> Our AI detects your face and extracts skin tone data</p>
+            <p><strong>Step 3:</strong> Advanced color analysis determines your undertone, value, and chroma</p>
+            <p><strong>Step 4:</strong> Get your personalized color palette and season classification</p>
+        </div>
     </div>
     """, unsafe_allow_html=True)
