@@ -36,7 +36,6 @@ html, body, [class*="css"] {{
     background: linear-gradient(135deg, {DARK} 0%, {PRIMARY} 100%);
 }}
 
-/* Sidebar Styling */
 [data-testid="stSidebar"] {{
     background: {SECONDARY};
     padding: 2rem 1rem;
@@ -55,7 +54,6 @@ html, body, [class*="css"] {{
     color: {TEXT_LIGHT} !important;
 }}
 
-/* Header */
 .header-container {{
     text-align: center;
     padding: 2rem 0 3rem 0;
@@ -76,19 +74,6 @@ html, body, [class*="css"] {{
     font-weight: 500;
 }}
 
-/* Upload Card */
-.upload-card {{
-    background: {SECONDARY};
-    border-radius: 24px;
-    padding: 3rem;
-    text-align: center;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-    margin: 2rem auto;
-    max-width: 900px;
-    border: 2px solid {ACCENT};
-}}
-
-/* Feature Cards */
 .feature-grid {{
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -128,7 +113,6 @@ html, body, [class*="css"] {{
     line-height: 1.6;
 }}
 
-/* Results Container */
 .results-container {{
     background: {SECONDARY};
     border-radius: 24px;
@@ -148,7 +132,6 @@ html, body, [class*="css"] {{
     gap: 0.5rem;
 }}
 
-/* Color Swatches */
 .palette-grid {{
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
@@ -177,7 +160,6 @@ html, body, [class*="css"] {{
     opacity: 0.95;
 }}
 
-/* Metric Cards */
 .metric-card {{
     background: linear-gradient(135deg, {ACCENT}, {PRIMARY});
     border-radius: 16px;
@@ -200,7 +182,6 @@ html, body, [class*="css"] {{
     color: {TEXT_LIGHT};
 }}
 
-/* How It Works */
 .how-it-works {{
     background: {SECONDARY};
     border-radius: 24px;
@@ -232,7 +213,6 @@ html, body, [class*="css"] {{
     flex-shrink: 0;
 }}
 
-/* Sidebar styling */
 .sidebar-header {{
     font-size: 1.2rem;
     font-weight: 700;
@@ -243,7 +223,6 @@ html, body, [class*="css"] {{
     gap: 0.5rem;
 }}
 
-/* Table styling */
 .dataframe {{
     border-radius: 12px;
     overflow: hidden;
@@ -251,7 +230,6 @@ html, body, [class*="css"] {{
     color: {TEXT_LIGHT};
 }}
 
-/* Buttons */
 .stButton > button {{
     background: {TEXT_ACCENT};
     color: {DARK};
@@ -268,7 +246,6 @@ html, body, [class*="css"] {{
     box-shadow: 0 5px 15px rgba(100, 255, 218, 0.4);
 }}
 
-/* File uploader styling */
 [data-testid="stFileUploadDropzone"] {{
     background: {PRIMARY};
     border: 2px dashed {TEXT_ACCENT};
@@ -296,9 +273,7 @@ n_colors = st.sidebar.slider("Colors to Extract", 3, 10, 6)
 st.sidebar.markdown('<div class="sidebar-header" style="margin-top:2rem;">🎯 Analysis Features</div>', unsafe_allow_html=True)
 show_skin = st.sidebar.checkbox("✅ Skin Tone Analysis", True)
 show_season = st.sidebar.checkbox("✅ Season Analysis", True)
-show_brand = st.sidebar.checkbox("✅ Brand Matching", True)
 show_outfit = st.sidebar.checkbox("✅ Outfit Generator", True)
-show_trend = st.sidebar.checkbox("✅ Trend Analysis", True)
 
 st.sidebar.markdown('<div class="sidebar-header" style="margin-top:2rem;">📊 Features</div>', unsafe_allow_html=True)
 st.sidebar.markdown(f"""
@@ -337,6 +312,37 @@ def extract_skin_pixels(face_img):
     pixels = pixels[np.any(pixels != [0, 0, 0], axis=1)]
     return pixels
 
+# ------------------ EXTRACT COLORS FROM IMAGE ------------------
+def extract_image_colors(image, n_colors=6):
+    """Extract dominant colors from the entire fashion image"""
+    img_array = np.array(image)
+    img_resized = cv2.resize(img_array, (150, 150))
+    pixels = img_resized.reshape(-1, 3)
+    
+    # Remove very dark and very bright pixels (likely background/noise)
+    mask = np.all((pixels > 20) & (pixels < 245), axis=1)
+    pixels = pixels[mask]
+    
+    if len(pixels) < 100:
+        pixels = img_resized.reshape(-1, 3)
+    
+    kmeans = KMeans(n_clusters=n_colors, random_state=42, n_init=10)
+    kmeans.fit(pixels)
+    
+    colors = kmeans.cluster_centers_.astype(int)
+    counts = np.bincount(kmeans.labels_)
+    percentages = (counts / counts.sum()) * 100
+    
+    # Sort by percentage
+    sorted_indices = np.argsort(percentages)[::-1]
+    colors = colors[sorted_indices]
+    percentages = percentages[sorted_indices]
+    
+    return colors, percentages
+
+def rgb_to_hex(rgb):
+    return '#{:02x}{:02x}{:02x}'.format(int(rgb[0]), int(rgb[1]), int(rgb[2]))
+
 # ------------------ COLOR SCIENCE ------------------
 def analyze_hvc(rgb):
     r, g, b = rgb / 255
@@ -372,30 +378,27 @@ SEASON_MAP = {
     ("Cool", "Bright", "Bright"): "Bright Winter",
 }
 
-# Recommended color palettes for each season (hex codes)
-# Based on professional color analysis theory
 SEASON_PALETTES = {
-    "Light Spring": ["#FFB6C1", "#FFDAB9", "#87CEEB", "#FFE4B5", "#F0E68C", "#FFFACD"],  # Blush pink, apricot, aqua, soft gold
-    "Warm Spring": ["#FF6347", "#DAA520", "#808000", "#FF4500", "#F4A460", "#D2691E"],  # Warm red, mustard, olive, tomato red
-    "Soft Autumn": ["#BC8F8F", "#D2B48C", "#8FBC8F", "#5F9EA0", "#DDA0DD", "#C19A6B"],  # Taupe, warm rose, soft olive, muted teal
-    "Dark Autumn": ["#3E2723", "#556B2F", "#8B4513", "#A0522D", "#B22222", "#2F4F4F"],  # Espresso, forest green, warm navy, brick red
-    "Light Summer": ["#B0E0E6", "#E6E6FA", "#F0FFF0", "#FFE4E1", "#F5DEB3", "#D8BFD8"],  # Baby blue, lilac, soft mint, rose beige
-    "Cool Summer": ["#708090", "#6A5ACD", "#9370DB", "#4682B4", "#8B7D7B", "#B0C4DE"],  # Slate blue, cool teal, plum, blue-based tones
-    "Dark Winter": ["#000000", "#800020", "#191970", "#4B0082", "#8B008B", "#2F4F4F"],  # Black, burgundy, ink navy, jewel tones
-    "Bright Winter": ["#0000FF", "#FF1493", "#DC143C", "#00CED1", "#8B00FF", "#FF00FF"],  # Electric blue, hot pink, cherry red, bright jewel tones
+    "Light Spring": ["#FFB6C1", "#FFDAB9", "#87CEEB", "#FFE4B5", "#F0E68C", "#FFFACD"],
+    "Warm Spring": ["#FF6347", "#DAA520", "#808000", "#FF4500", "#F4A460", "#D2691E"],
+    "Soft Autumn": ["#BC8F8F", "#D2B48C", "#8FBC8F", "#5F9EA0", "#DDA0DD", "#C19A6B"],
+    "Dark Autumn": ["#3E2723", "#556B2F", "#8B4513", "#A0522D", "#B22222", "#2F4F4F"],
+    "Light Summer": ["#B0E0E6", "#E6E6FA", "#F0FFF0", "#FFE4E1", "#F5DEB3", "#D8BFD8"],
+    "Cool Summer": ["#708090", "#6A5ACD", "#9370DB", "#4682B4", "#8B7D7B", "#B0C4DE"],
+    "Dark Winter": ["#000000", "#800020", "#191970", "#4B0082", "#8B008B", "#2F4F4F"],
+    "Bright Winter": ["#0000FF", "#FF1493", "#DC143C", "#00CED1", "#8B00FF", "#FF00FF"],
     "Neutral / Transitional": ["#D2B48C", "#BC8F8F", "#B0C4DE", "#DEB887", "#8FBC8F", "#DDA0DD"]
 }
 
-# Colors to AVOID for each season
 SEASON_AVOID = {
-    "Light Spring": ["#000000", "#708090", "#8B7D7B", "#800020"],  # Black, cool greys, burgundy
-    "Warm Spring": ["#4169E1", "#E6E6FA", "#B0E0E6", "#D8BFD8"],  # Cool blues, lavender, icy pastels
-    "Soft Autumn": ["#000000", "#FF0000", "#E6E6FA", "#F0FFF0"],  # Black, bright red, pastels
-    "Dark Autumn": ["#FFB6C1", "#B0E0E6", "#D3D3D3", "#FFFACD"],  # Powdery pastels, icy greys
-    "Light Summer": ["#FF8C00", "#DAA520", "#B22222", "#FF1493"],  # Orange, mustard, rust, neon
-    "Cool Summer": ["#A0522D", "#808000", "#D2691E", "#DAA520"],  # Warm browns, yellow-greens
-    "Dark Winter": ["#F5DEB3", "#D2B48C", "#FFE4E1", "#A0522D"],  # Beige, camel, dusty pastels, warm browns
-    "Bright Winter": ["#8B7D7B", "#808000", "#BC8F8F", "#FFFACD"],  # Muted neutrals, olive
+    "Light Spring": ["#000000", "#708090", "#8B7D7B", "#800020"],
+    "Warm Spring": ["#4169E1", "#E6E6FA", "#B0E0E6", "#D8BFD8"],
+    "Soft Autumn": ["#000000", "#FF0000", "#E6E6FA", "#F0FFF0"],
+    "Dark Autumn": ["#FFB6C1", "#B0E0E6", "#D3D3D3", "#FFFACD"],
+    "Light Summer": ["#FF8C00", "#DAA520", "#B22222", "#FF1493"],
+    "Cool Summer": ["#A0522D", "#808000", "#D2691E", "#DAA520"],
+    "Dark Winter": ["#F5DEB3", "#D2B48C", "#FFE4E1", "#A0522D"],
+    "Bright Winter": ["#8B7D7B", "#808000", "#BC8F8F", "#FFFACD"],
     "Neutral / Transitional": []
 }
 
@@ -408,7 +411,6 @@ def get_recommended_palette(season):
 def get_avoid_colors(season):
     return SEASON_AVOID.get(season, [])
 
-# Outfit suggestions with image URLs
 OUTFIT_SUGGESTIONS = {
     "Light Spring": [
         {"name": "Pastel Floral Dress", "url": "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400", "desc": "Light peach or mint dress"},
@@ -467,221 +469,141 @@ if uploaded:
     st.image(image, use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-    face = detect_face(image)
-    if face is None:
-        st.error("❌ Face not detected. Please upload a clear front-facing image.")
-        st.stop()
-
-    skin_pixels = extract_skin_pixels(face)
-    if len(skin_pixels) < 300:
-        st.error("❌ Insufficient skin pixels detected.")
-        st.stop()
-
-    # Analyze skin tone to determine season
-    avg_skin = np.mean(skin_pixels, axis=0).astype(int)
-    h, v, c = analyze_hvc(avg_skin)
-    undertone, value, chroma = classify_hvc(h, v, c)
-    detected_season = get_season(undertone, value, chroma)
-    
-    # Display skin analysis
+    # EXTRACT COLORS FROM THE FASHION IMAGE ITSELF
     st.markdown('<div class="results-container">', unsafe_allow_html=True)
-    st.markdown('<div class="section-title">🔍 Your Skin Analysis</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-title">🎨 Extracted Colors from Your Image</div>', unsafe_allow_html=True)
+    st.markdown(f'<p style="color:{TEXT_LIGHT}; font-size:1.1rem; margin-bottom:1.5rem;">These are the dominant colors detected in the uploaded fashion image</p>', unsafe_allow_html=True)
     
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.markdown(f"""
-        <div class="metric-card">
-            <div class="metric-label">Undertone</div>
-            <div class="metric-value">{undertone}</div>
-        </div>
-        """, unsafe_allow_html=True)
-    with col2:
-        st.markdown(f"""
-        <div class="metric-card">
-            <div class="metric-label">Value</div>
-            <div class="metric-value">{value}</div>
-        </div>
-        """, unsafe_allow_html=True)
-    with col3:
-        st.markdown(f"""
-        <div class="metric-card">
-            <div class="metric-label">Chroma</div>
-            <div class="metric-value">{chroma}</div>
-        </div>
-        """, unsafe_allow_html=True)
-    with col4:
-        st.markdown(f"""
-        <div class="metric-card">
-            <div class="metric-label">Season</div>
-            <div class="metric-value">{detected_season}</div>
-        </div>
-        """, unsafe_allow_html=True)
+    colors, percentages = extract_image_colors(image, n_colors)
     
-    st.markdown('</div>', unsafe_allow_html=True)
+    # Display extracted colors
+    cols = st.columns(len(colors))
+    image_analysis_rows = []
     
-    # Get recommended colors for this season
-    recommended_colors = get_recommended_palette(detected_season)
-    avoid_colors = get_avoid_colors(detected_season)
-    
-    st.markdown('<div class="results-container">', unsafe_allow_html=True)
-    st.markdown(f'<div class="section-title">🎨 Your Recommended Color Palette</div>', unsafe_allow_html=True)
-    st.markdown(f'<p style="color:{TEXT_LIGHT}; font-size:1.1rem; margin-bottom:1.5rem;">Colors that will complement your <strong>{detected_season}</strong> complexion based on professional color analysis</p>', unsafe_allow_html=True)
-
-    # Display color swatches
-    cols = st.columns(len(recommended_colors))
-    analysis_rows = []
-    
-    for col, hex_code in zip(cols, recommended_colors):
-        # Convert hex to RGB for analysis
-        rgb = np.array([int(hex_code[i:i+2], 16) for i in (1, 3, 5)])
-        h_col, v_col, c_col = analyze_hvc(rgb)
-        color_undertone, color_value, color_chroma = classify_hvc(h_col, v_col, c_col)
-
+    for col, (color, pct) in zip(cols, zip(colors, percentages)):
+        hex_code = rgb_to_hex(color)
+        h, v, c = analyze_hvc(color)
+        u, val, chr = classify_hvc(h, v, c)
+        
         with col:
             st.markdown(f"""
             <div class="swatch" style="background:{hex_code};">
                 <div style="font-size:1.2rem;">●</div>
                 <div class="swatch-hex">{hex_code.upper()}</div>
+                <div style="font-size:0.85rem; margin-top:0.5rem;">{pct:.1f}%</div>
             </div>
             """, unsafe_allow_html=True)
-
-        analysis_rows.append([
-            hex_code.upper(), color_undertone, color_value, color_chroma
-        ])
-
-    # Display analysis table
+        
+        image_analysis_rows.append([hex_code.upper(), f"{pct:.1f}%", u, val, chr])
+    
+    # Display image color analysis table
     st.markdown('<div style="margin-top:2rem;">', unsafe_allow_html=True)
-    st.markdown(f'<div class="section-title">📊 Detailed Color Analysis</div>', unsafe_allow_html=True)
-    df = pd.DataFrame(
-        analysis_rows,
-        columns=["Color", "Undertone", "Value", "Chroma"]
+    df_image = pd.DataFrame(
+        image_analysis_rows,
+        columns=["Color", "Percentage", "Undertone", "Value", "Chroma"]
     )
-    st.dataframe(df, use_container_width=True, hide_index=True)
+    st.dataframe(df_image, use_container_width=True, hide_index=True)
     st.markdown('</div>', unsafe_allow_html=True)
-    
     st.markdown('</div>', unsafe_allow_html=True)
+
+    # NOW DO FACE DETECTION AND PERSONAL ANALYSIS
+    face = detect_face(image)
     
-    # Colors to Avoid Section
-    if avoid_colors:
-        st.markdown('<div class="results-container">', unsafe_allow_html=True)
-        st.markdown(f'<div class="section-title">❌ Colors to Avoid</div>', unsafe_allow_html=True)
-        st.markdown(f'<p style="color:{TEXT_LIGHT}; font-size:1.1rem; margin-bottom:1.5rem;">These shades may clash with your <strong>{detected_season}</strong> complexion</p>', unsafe_allow_html=True)
+    if face is not None and show_skin:
+        skin_pixels = extract_skin_pixels(face)
         
-        # Display avoid color swatches
-        cols = st.columns(len(avoid_colors))
-        for col, hex_code in zip(cols, avoid_colors):
-            with col:
+        if len(skin_pixels) >= 300:
+            # Analyze skin tone to determine season
+            avg_skin = np.mean(skin_pixels, axis=0).astype(int)
+            h, v, c = analyze_hvc(avg_skin)
+            undertone, value, chroma = classify_hvc(h, v, c)
+            detected_season = get_season(undertone, value, chroma)
+            
+            # Display skin analysis
+            st.markdown('<div class="results-container">', unsafe_allow_html=True)
+            st.markdown('<div class="section-title">🔍 Your Skin Analysis</div>', unsafe_allow_html=True)
+            
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
                 st.markdown(f"""
-                <div class="swatch" style="background:{hex_code}; opacity:0.7;">
-                    <div style="font-size:1.2rem;">✕</div>
-                    <div class="swatch-hex">{hex_code.upper()}</div>
+                <div class="metric-card">
+                    <div class="metric-label">Undertone</div>
+                    <div class="metric-value">{undertone}</div>
                 </div>
                 """, unsafe_allow_html=True)
-        
-        st.markdown('</div>', unsafe_allow_html=True)
-    
-    # Color Theory Explanation
-    st.markdown('<div class="results-container">', unsafe_allow_html=True)
-    st.markdown(f'<div class="section-title">🧠 Why These Colors Work for You</div>', unsafe_allow_html=True)
-    
-    # Season-specific explanations
-    explanations = {
-        "Light Spring": "Your complexion has warm, peachy undertones with light value and bright chroma. Light, warm, and clear colors harmonize with your natural coloring. Dark or muted tones would overpower your delicate complexion.",
-        "Warm Spring": "You have golden warmth with medium brightness. Warm reds, yellows, and greens enhance your natural glow. Cool blues and icy pastels clash with your warm undertones.",
-        "Soft Autumn": "Your skin has muted warmth with medium depth. Earthy, softened tones complement your natural harmony. Bright or stark colors appear harsh against your muted coloring.",
-        "Dark Autumn": "You have deep, warm coloring with rich tones. Deep, warm, and earthy colors match your intensity. Light pastels and icy colors wash you out.",
-        "Light Summer": "Your complexion features cool, rosy undertones with light value and soft contrast. Soft, cool pastels enhance your delicate coloring. Warm or bright shades clash with your cool tones.",
-        "Cool Summer": "You have cool undertones with medium depth and muted chroma. Soft, cool, blended colors harmonize beautifully. Warm browns and yellow-based colors create discord.",
-        "Dark Winter": "Your coloring has high contrast with cool undertones and deep value. Bold, cool, saturated colors match your dramatic contrast. Muted or warm neutrals diminish your natural intensity.",
-        "Bright Winter": "You have high contrast with cool undertones and bright chroma. Clear, bright, cool colors complement your vivid coloring. Muted or warm tones dull your natural clarity.",
-        "Neutral / Transitional": "Your coloring has balanced characteristics. You have flexibility with both warm and cool tones, though you may lean slightly in one direction."
-    }
-    
-    st.markdown(f'<p style="color:{TEXT_LIGHT}; font-size:1rem; line-height:1.8;">{explanations.get(detected_season, "")}</p>', unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
-    
-    # Outfit Suggestions Section
-    if show_outfit:
-        outfit_suggestions = get_outfit_suggestions(detected_season)
-        
-        st.markdown('<div class="results-container">', unsafe_allow_html=True)
-        st.markdown(f'<div class="section-title">👗 Outfit Suggestions for {detected_season}</div>', unsafe_allow_html=True)
-        st.markdown(f'<p style="color:{TEXT_LIGHT}; font-size:1.1rem; margin-bottom:1.5rem;">Curated outfit ideas that complement your season</p>', unsafe_allow_html=True)
-        
-        cols = st.columns(3)
-        for idx, outfit in enumerate(outfit_suggestions):
-            with cols[idx]:
+            with col2:
                 st.markdown(f"""
-                <div style="background:{PRIMARY}; border-radius:16px; padding:1rem; margin-bottom:1rem; border: 2px solid {ACCENT};">
-                    <img src="{outfit['url']}" style="width:100%; border-radius:12px; margin-bottom:0.5rem;" onerror="this.src='https://via.placeholder.com/400x500/1a1a2e/64ffda?text=Outfit+Suggestion'">
-                    <h4 style="color:{TEXT_LIGHT}; margin:0.5rem 0; font-size:1.1rem;">{outfit['name']}</h4>
-                    <p style="color:{TEXT_ACCENT}; margin:0; font-size:0.9rem;">{outfit['desc']}</p>
+                <div class="metric-card">
+                    <div class="metric-label">Value</div>
+                    <div class="metric-value">{value}</div>
                 </div>
                 """, unsafe_allow_html=True)
-        
-        st.markdown('</div>', unsafe_allow_html=True)
+            with col3:
+                st.markdown(f"""
+                <div class="metric-card">
+                    <div class="metric-label">Chroma</div>
+                    <div class="metric-value">{chroma}</div>
+                </div>
+                """, unsafe_allow_html=True)
+            with col4:
+                st.markdown(f"""
+                <div class="metric-card">
+                    <div class="metric-label">Season</div>
+                    <div class="metric-value">{detected_season}</div>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+            # Get recommended colors for this season
+            recommended_colors = get_recommended_palette(detected_season)
+            avoid_colors = get_avoid_colors(detected_season)
+            
+            st.markdown('<div class="results-container">', unsafe_allow_html=True)
+            st.markdown(f'<div class="section-title">🎨 Your Recommended Color Palette</div>', unsafe_allow_html=True)
+            st.markdown(f'<p style="color:{TEXT_LIGHT}; font-size:1.1rem; margin-bottom:1.5rem;">Colors that will complement your <strong>{detected_season}</strong> complexion</p>', unsafe_allow_html=True)
 
-else:
-    # Feature cards
-    st.markdown("""
-    <div class="feature-grid">
-        <div class="feature-card">
-            <div class="feature-icon">💅</div>
-            <div class="feature-title">Skin Tone Detection</div>
-            <div class="feature-desc">Discover your undertone and get personalized color recommendations</div>
-        </div>
-        <div class="feature-card">
-            <div class="feature-icon">🎭</div>
-            <div class="feature-title">Season Analysis</div>
-            <div class="feature-desc">Find out if you're a Spring, Summer, Autumn, or Winter</div>
-        </div>
-        <div class="feature-card">
-            <div class="feature-icon">👗</div>
-            <div class="feature-title">Outfit Generator</div>
-            <div class="feature-desc">Get AI-powered outfit suggestions for any occasion</div>
-        </div>
-        <div class="feature-card">
-            <div class="feature-icon">🏷️</div>
-            <div class="feature-title">Brand Matching</div>
-            <div class="feature-desc">See which luxury brands match your color palette</div>
-        </div>
-        <div class="feature-card">
-            <div class="feature-icon">📈</div>
-            <div class="feature-title">Trend Analysis</div>
-            <div class="feature-desc">See how your style aligns with 2024-2025 trends</div>
-        </div>
-        <div class="feature-card">
-            <div class="feature-icon">🎨</div>
-            <div class="feature-title">Color Intelligence</div>
-            <div class="feature-desc">Extract dominant colors with psychology insights</div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+            # Display color swatches
+            cols = st.columns(len(recommended_colors))
+            analysis_rows = []
+            
+            for col, hex_code in zip(cols, recommended_colors):
+                rgb = np.array([int(hex_code[i:i+2], 16) for i in (1, 3, 5)])
+                h_col, v_col, c_col = analyze_hvc(rgb)
+                color_undertone, color_value, color_chroma = classify_hvc(h_col, v_col, c_col)
 
-    # How it works
-    st.markdown(f"""
-    <div class="how-it-works">
-        <div class="section-title">✨ How It Works</div>
-        <div class="step">
-            <div class="step-number">1</div>
-            <div>Upload any fashion image</div>
-        </div>
-        <div class="step">
-            <div class="step-number">2</div>
-            <div>AI extracts and analyzes colors</div>
-        </div>
-        <div class="step">
-            <div class="step-number">3</div>
-            <div>Get personalized recommendations</div>
-        </div>
-        <div class="step">
-            <div class="step-number">4</div>
-            <div>Download your complete analysis</div>
-        </div>
-        <br>
-        <div style="text-align:center; color:{TEXT_ACCENT}; margin-top:2rem;">
-            <strong>🧠 Powered by Machine Learning & Color Theory</strong><br>
-            <span style="color:{TEXT_LIGHT};">Built with Python • Streamlit • scikit-learn</span>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+                with col:
+                    st.markdown(f"""
+                    <div class="swatch" style="background:{hex_code};">
+                        <div style="font-size:1.2rem;">●</div>
+                        <div class="swatch-hex">{hex_code.upper()}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                analysis_rows.append([hex_code.upper(), color_undertone, color_value, color_chroma])
+
+            st.markdown('<div style="margin-top:2rem;">', unsafe_allow_html=True)
+            st.markdown(f'<div class="section-title">📊 Detailed Color Analysis</div>', unsafe_allow_html=True)
+            df = pd.DataFrame(
+                analysis_rows,
+                columns=["Color", "Undertone", "Value", "Chroma"]
+            )
+            st.dataframe(df, use_container_width=True, hide_index=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+            # Colors to Avoid Section
+            if avoid_colors:
+                st.markdown('<div class="results-container">', unsafe_allow_html=True)
+                st.markdown(f'<div class="section-title">❌ Colors to Avoid</div>', unsafe_allow_html=True)
+                st.markdown(f'<p style="color:{TEXT_LIGHT}; font-size:1.1rem; margin-bottom:1.5rem;">These shades may clash with your <strong>{detected_season}</strong> complexion</p>', unsafe_allow_html=True)
+                
+                cols = st.columns(len(avoid_colors))
+                for col, hex_code in zip(cols, avoid_colors):
+                    with col:
+                        st.markdown(f"""
+                        <div class="swatch" style="background:{hex_code}; opacity:0.7;">
+                            <div style="font-size:1.2rem;">✕</div>
+                            <div class="swatch-hex">{hex_code.upper()}</div>
+                        </div>
+                        """, unsafe_allow
