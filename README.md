@@ -1,50 +1,27 @@
 👗 AI Fashion Color Palette Generator
 An intelligent fashion color analysis tool that extracts dominant colors from clothing images and provides styling recommendations based on color theory and psychology.
-Show Image
-Show Image
-Show Image
-Show Image
-🎨 Live Demo
-Try it now: [Your Streamlit App URL]
-✨ Features
-🎯 Core Functionality
+ Core Functionality
 
 AI Color Extraction: Uses K-means clustering to identify dominant colors
 Smart Color Analysis: Extracts 3-10 colors with distribution percentages
 Color Theory Integration: Generates complementary, analogous, and triadic color schemes
 Real-time Processing: Instant analysis of uploaded images
 
-🧠 Intelligence Features
+ Intelligence Features
 
 Color Psychology Insights: Emotional and psychological associations
 Occasion Recommendations: Suggests where to wear the colors
 Season Matching: Identifies best seasons for color combinations
 Styling Tips: Professional outfit combination advice
 
-📊 Visualizations
+ Visualizations
 
 Color Palette Chart: Visual representation with percentages
 Color Swatches: Individual color displays with hex codes
 Harmony Wheels: Complementary and analogous color relationships
 Downloadable Reports: Export color data as CSV
 
-🚀 Quick Start
-Installation
 
-Clone the repository:https://github.com/Aarteaa/PaletteIQ/edit/main/README.md
-
-bashgit clone 
-cd ai-fashion-color-palette
-
-Install dependencies:
-
-bashpip install -r requirements.txt
-
-Run the app:
-
-bashstreamlit run fashion_color_app.py
-
-Open your browser to http://localhost:8501
 
 📁 Project Structure
 ai-fashion-color-palette/
@@ -161,21 +138,7 @@ Accuracy: 95%+ color identification accuracy
 User Engagement: Average session time 5+ minutes
 Scalability: Can process 1000+ images/hour
 
-🤝 Contributing
-Contributions are welcome! Please feel free to submit a Pull Request.
 
-Fork the project
-Create your feature branch (git checkout -b feature/AmazingFeature)
-Commit your changes (git commit -m 'Add some AmazingFeature')
-Push to the branch (git push origin feature/AmazingFeature)
-Open a Pull Request
-
-
-
-Portfolio: your-portfolio.com
-LinkedIn: linkedin.com/in/aarti-navale-697b07292
-GitHub: Aarteaa
-Email: artinavale05@gmail.com
 
 🙏 Acknowledgments
 
