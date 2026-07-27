@@ -5,6 +5,7 @@ from PIL import Image
 from sklearn.cluster import KMeans
 import pandas as pd
 import colorsys
+import os
 
 # ------------------ PAGE CONFIG ------------------
 st.set_page_config(
@@ -197,85 +198,133 @@ st.sidebar.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# ------------------ FACE DETECTION ------------------
-face_cascade = cv2.CascadeClassifier(
-    cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
-)
+# ------------------ FACE DETECTION (ROBUST LOADING) ------------------
+@st.cache_resource(show_spinner=False)
+def load_face_cascade():
+    """
+    Load the Haar cascade robustly. On Streamlit Cloud, cv2.data can be
+    missing its 'data' attribute if opencv-python (GUI build) is installed
+    instead of opencv-python-headless, or if both are installed together.
+    This checks multiple fallback locations instead of crashing at import time.
+    """
+    candidate_paths = []
+
+    # Preferred: cv2's own bundled data folder, if the attribute exists
+    try:
+        candidate_paths.append(os.path.join(cv2.data.haarcascades, "haarcascade_frontalface_default.xml"))
+    except AttributeError:
+        pass
+
+    # Fallback: locate it relative to the installed cv2 package folder directly
+    try:
+        cv2_pkg_dir = os.path.dirname(cv2.__file__)
+        candidate_paths.append(os.path.join(cv2_pkg_dir, "data", "haarcascade_frontalface_default.xml"))
+    except Exception:
+        pass
+
+    # Fallback: a copy bundled alongside this script (recommended - see note below)
+    candidate_paths.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "haarcascade_frontalface_default.xml"))
+
+    for path in candidate_paths:
+        if path and os.path.exists(path):
+            cascade = cv2.CascadeClassifier(path)
+            if not cascade.empty():
+                return cascade
+
+    return None
+
+face_cascade = load_face_cascade()
+
+if face_cascade is None:
+    st.error(
+        "⚠️ **Face detection model failed to load.** This usually means the wrong "
+        "OpenCV package is installed. In `requirements.txt`, use only "
+        "`opencv-python-headless` (remove `opencv-python` if it's also listed), "
+        "then redeploy. As a permanent fix, you can also download "
+        "`haarcascade_frontalface_default.xml` from the OpenCV GitHub repo and place "
+        "it in the same folder as this script."
+    )
+    st.stop()
 
 def detect_face(image):
     """Detect face in image and return face region"""
     img = np.array(image)
     gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-    
+
     # Try multiple detection parameters for better results
     faces = face_cascade.detectMultiScale(
-        gray, 
-        scaleFactor=1.05, 
-        minNeighbors=4, 
+        gray,
+        scaleFactor=1.05,
+        minNeighbors=4,
         minSize=(50, 50),
         flags=cv2.CASCADE_SCALE_IMAGE
     )
-    
+
     if len(faces) == 0:
         # Try with more relaxed parameters
         faces = face_cascade.detectMultiScale(
-            gray, 
-            scaleFactor=1.1, 
-            minNeighbors=3, 
+            gray,
+            scaleFactor=1.1,
+            minNeighbors=3,
             minSize=(40, 40)
         )
-    
+
     if len(faces) == 0:
         return None, None
-    
+
     # Get the largest face
     if len(faces) > 1:
         faces = sorted(faces, key=lambda x: x[2] * x[3], reverse=True)
-    
+
     x, y, w, h = faces[0]
     face_region = img[y:y+h, x:x+w]
-    
-    # Return both face region and coordinates for visualization
+
     return face_region, (x, y, w, h)
 
 def extract_skin_pixels(face_img):
     """Extract skin pixels from face using LAB color space"""
-    # Convert to LAB color space (better for skin detection)
     lab = cv2.cvtColor(face_img, cv2.COLOR_RGB2LAB)
-    
-    # Define skin tone range in LAB space
+
     lower = np.array([20, 125, 125])
     upper = np.array([255, 190, 190])
-    
-    # Create mask
+
     mask = cv2.inRange(lab, lower, upper)
-    
-    # Apply morphological operations to clean up mask
-    kernel = np.ones((3,3), np.uint8)
+
+    kernel = np.ones((3, 3), np.uint8)
     mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
-    
-    # Extract skin pixels
+
     skin = cv2.bitwise_and(face_img, face_img, mask=mask)
     pixels = skin.reshape(-1, 3)
     pixels = pixels[np.any(pixels != [0, 0, 0], axis=1)]
-    
+
     return pixels
 
 # ------------------ COLOR SCIENCE ------------------
+# Per classic color theory (Hue / Value / Intensity model): Hue is the pure
+# color position on the wheel, Value is lightness vs darkness, and Intensity
+# (chroma/saturation) is how bright vs muted a color reads. Skin tones sit in
+# a narrow hue band between yellow-orange and red on the wheel - warmer
+# undertones read closer to yellow-orange, cooler undertones read closer to
+# red-purple. That narrow band means small hue shifts matter a lot more for
+# skin than for general color classification, so thresholds below are tuned
+# tighter around that band rather than the full 360° wheel.
+
 def analyze_hvc(rgb):
-    """Analyze Hue, Value, Chroma"""
+    """Analyze Hue, Value, Intensity (chroma/saturation)"""
     r, g, b = rgb / 255.0
     h, s, v = colorsys.rgb_to_hsv(r, g, b)
     return h * 360, v, s
 
 def classify_hvc(h, v, c):
-    """Classify color characteristics for season analysis"""
-    # Undertone
-    if h < 30 or h > 330:
-        undertone = "Warm"
-    elif 30 <= h <= 210:
+    """Classify undertone, value, and intensity for season analysis"""
+    # Skin hues live roughly between ~10° (red) and ~50° (yellow-orange).
+    # Lower hue (toward red/pink/purple) = cooler undertone.
+    # Higher hue (toward yellow-orange) = warmer undertone.
+    if h <= 25:
         undertone = "Cool"
+    elif h >= 38:
+        undertone = "Warm"
     else:
         undertone = "Neutral"
 
@@ -287,9 +336,9 @@ def classify_hvc(h, v, c):
     else:
         value = "Medium"
 
-    # Chroma (saturation)
+    # Intensity (chroma/saturation)
     chroma = "Bright" if c > 0.4 else "Muted"
-    
+
     return undertone, value, chroma
 
 # ------------------ SEASON MAPPING ------------------
@@ -330,6 +379,10 @@ SEASON_PALETTES = {
     "Neutral / Transitional": ["#D2B48C", "#BC8F8F", "#B0C4DE", "#DEB887", "#8FBC8F", "#DDA0DD", "#F5DEB3", "#C0C0C0"]
 }
 
+# Colors to avoid are chosen as the "complementary" side of the wheel from
+# each season's palette - i.e. hues that would visually cancel/clash against
+# the undertone rather than harmonize with it, the same logic used in
+# makeup color-correction (complementary colors neutralize each other).
 SEASON_AVOID = {
     "Light Spring": ["#000000", "#708090", "#8B7D7B", "#800020", "#2F4F4F"],
     "Warm Spring": ["#4169E1", "#E6E6FA", "#B0E0E6", "#D8BFD8", "#708090"],
@@ -367,52 +420,46 @@ uploaded = st.file_uploader("📤 Upload Your Photo (Clear Face Photo for Best R
 
 if uploaded:
     image = Image.open(uploaded).convert("RGB")
-    
-    # Display uploaded image
+
     st.markdown('<div class="results-container">', unsafe_allow_html=True)
     st.markdown('<div class="section-title">📸 Uploaded Image</div>', unsafe_allow_html=True)
-    
+
     col1, col2 = st.columns([1, 1])
     with col1:
         st.image(image, caption="Original Image", use_container_width=True)
-    
-    # DETECT FACE
+
     with st.spinner("🔍 Detecting face..."):
         face, coords = detect_face(image)
-    
+
     if face is None:
         st.markdown('</div>', unsafe_allow_html=True)
         st.error("❌ **No face detected!** Please upload a clear photo with your face visible. Tips: Good lighting, face clearly visible, front-facing photo works best.")
         st.stop()
-    
-    # Show detected face
+
     with col2:
         st.image(face, caption="Detected Face Region", use_container_width=True)
-    
+
     st.success("✅ Face detected successfully!")
     st.markdown('</div>', unsafe_allow_html=True)
-    
-    # EXTRACT SKIN PIXELS
+
     with st.spinner("💅 Analyzing skin tone..."):
         skin_pixels = extract_skin_pixels(face)
-    
+
     if len(skin_pixels) < 100:
         st.error("❌ **Insufficient skin pixels detected.** Please upload a photo with better lighting and clearer view of your face.")
         st.stop()
-    
-    # ANALYZE SKIN TONE
+
     avg_skin = np.mean(skin_pixels, axis=0).astype(int)
     skin_hex = rgb_to_hex(avg_skin)
     h, v, c = analyze_hvc(avg_skin)
     undertone, value, chroma = classify_hvc(h, v, c)
     detected_season = get_season(undertone, value, chroma)
-    
-    # Display skin analysis
+
     st.markdown('<div class="results-container">', unsafe_allow_html=True)
     st.markdown('<div class="section-title">🔍 Your Skin Analysis</div>', unsafe_allow_html=True)
-    
+
     col1, col2, col3, col4, col5 = st.columns(5)
-    
+
     with col1:
         st.markdown(f"""
         <div class="metric-card">
@@ -421,7 +468,7 @@ if uploaded:
             <div style="font-size:0.8rem; color:{TEXT_ACCENT};">{skin_hex.upper()}</div>
         </div>
         """, unsafe_allow_html=True)
-    
+
     with col2:
         st.markdown(f"""
         <div class="metric-card">
@@ -429,7 +476,7 @@ if uploaded:
             <div class="metric-value">{undertone}</div>
         </div>
         """, unsafe_allow_html=True)
-    
+
     with col3:
         st.markdown(f"""
         <div class="metric-card">
@@ -437,15 +484,15 @@ if uploaded:
             <div class="metric-value">{value}</div>
         </div>
         """, unsafe_allow_html=True)
-    
+
     with col4:
         st.markdown(f"""
         <div class="metric-card">
-            <div class="metric-label">Chroma</div>
+            <div class="metric-label">Intensity</div>
             <div class="metric-value">{chroma}</div>
         </div>
         """, unsafe_allow_html=True)
-    
+
     with col5:
         st.markdown(f"""
         <div class="metric-card">
@@ -453,25 +500,22 @@ if uploaded:
             <div class="metric-value">{detected_season}</div>
         </div>
         """, unsafe_allow_html=True)
-    
+
     st.markdown('</div>', unsafe_allow_html=True)
-    
-    # COLOR PALETTE RECOMMENDATION
+
     recommended_colors = SEASON_PALETTES.get(detected_season, SEASON_PALETTES["Neutral / Transitional"])
-    
+
     st.markdown('<div class="results-container">', unsafe_allow_html=True)
     st.markdown(f'<div class="section-title">🎨 Your Personalized Color Palette</div>', unsafe_allow_html=True)
     st.markdown(f'<p style="color:{TEXT_LIGHT}; font-size:1.1rem; margin-bottom:1.5rem;">{SEASON_DESCRIPTIONS[detected_season]}</p>', unsafe_allow_html=True)
-    
-    # Display color swatches
+
     cols = st.columns(len(recommended_colors[:n_colors]))
-    
+
     for col, hex_code in zip(cols, recommended_colors[:n_colors]):
-        # Determine text color for contrast
         rgb_vals = [int(hex_code[i:i+2], 16) for i in (1, 3, 5)]
         brightness = sum(rgb_vals) / 3
         text_color = "white" if brightness < 128 else "black"
-        
+
         with col:
             st.markdown(f"""
             <div class="swatch" style="background:{hex_code}; color:{text_color};">
@@ -479,23 +523,22 @@ if uploaded:
                 <div class="swatch-hex">{hex_code.upper()}</div>
             </div>
             """, unsafe_allow_html=True)
-    
+
     st.markdown('</div>', unsafe_allow_html=True)
-    
-    # COLORS TO AVOID
+
     avoid_colors = SEASON_AVOID.get(detected_season, [])
-    
+
     if avoid_colors:
         st.markdown('<div class="results-container">', unsafe_allow_html=True)
         st.markdown(f'<div class="section-title">❌ Colors to Avoid</div>', unsafe_allow_html=True)
-        st.markdown(f'<p style="color:{TEXT_LIGHT}; font-size:1.1rem; margin-bottom:1.5rem;">These shades may clash with your <strong>{detected_season}</strong> complexion</p>', unsafe_allow_html=True)
-        
+        st.markdown(f'<p style="color:{TEXT_LIGHT}; font-size:1.1rem; margin-bottom:1.5rem;">These shades sit on the complementary side of the color wheel from your <strong>{detected_season}</strong> undertone, so they tend to fight it rather than blend</p>', unsafe_allow_html=True)
+
         cols = st.columns(len(avoid_colors))
         for col, hex_code in zip(cols, avoid_colors):
             rgb_vals = [int(hex_code[i:i+2], 16) for i in (1, 3, 5)]
             brightness = sum(rgb_vals) / 3
             text_color = "white" if brightness < 128 else "black"
-            
+
             with col:
                 st.markdown(f"""
                 <div class="swatch" style="background:{hex_code}; color:{text_color}; opacity:0.7;">
@@ -503,11 +546,10 @@ if uploaded:
                     <div class="swatch-hex">{hex_code.upper()}</div>
                 </div>
                 """, unsafe_allow_html=True)
-        
+
         st.markdown('</div>', unsafe_allow_html=True)
 
 else:
-    # Landing page
     st.markdown("""
     <div class="feature-grid">
         <div class="feature-card">
@@ -532,14 +574,14 @@ else:
         </div>
     </div>
     """, unsafe_allow_html=True)
-    
+
     st.markdown(f"""
     <div class="results-container">
         <div class="section-title">✨ How It Works</div>
         <div style="color:{TEXT_LIGHT}; line-height:2; font-size:1.05rem;">
             <p><strong>Step 1:</strong> Upload a clear photo of yourself (good lighting, face visible)</p>
             <p><strong>Step 2:</strong> Our AI detects your face and extracts skin tone data</p>
-            <p><strong>Step 3:</strong> Advanced color analysis determines your undertone, value, and chroma</p>
+            <p><strong>Step 3:</strong> Advanced color analysis determines your undertone, value, and intensity</p>
             <p><strong>Step 4:</strong> Get your personalized color palette and season classification</p>
         </div>
     </div>
